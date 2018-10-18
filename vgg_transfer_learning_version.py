@@ -138,7 +138,7 @@ def train_val_test_split(dataset, train_split, val_split, test_split):
 	val_data = torch.utils.data.Subset(dataset, val_ids)
 	test_data = torch.utils.data.Subset(dataset, test_ids)
 
-    return(train_data, val_data, test_data)
+	return(train_data, val_data, test_data)
 
 #----------------------------------------------------
 # Below is the train function
