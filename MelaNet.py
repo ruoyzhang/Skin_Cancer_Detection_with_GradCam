@@ -51,7 +51,6 @@ def train_val_test_split(dataset, train_split, val_split, test_split):
 	"""
     if train_split + val_split + test_split != 1:
         print('Incorrect split sizes')
-        return
     
     # Size of data set
     N = dataset.__len__()
