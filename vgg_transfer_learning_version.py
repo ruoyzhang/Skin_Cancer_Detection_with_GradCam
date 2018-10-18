@@ -29,12 +29,12 @@ class vgg_preloaded(nn.Module):
 		features.extend([nn.Linear(num_features, self.num_class)])
 		if stage == 'transfer':
 			for param in self.model.features.parameters():
-				param.require_grad = False
+				param.requires_grad = False
 			self.model.classifier = nn.Sequential(*features)
-			self.model.classifier.require_grad = True
+			self.model.classifier.requires_grad = True
 		elif stage == 'fine':
-			self.model.classifier.require_grad = True
-			self.model.features = True
+			self.model.classifier.requires_grad = True
+			self.model.features.requires_grad = True
 
 	def forward(self, inp):
 		return(self.model(inp))
@@ -166,11 +166,11 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, stage = 'transfer
 	if use_cuda:
 		model = model.cuda()
 	if stage == 'transfer':
-		model.features.require_grad = False
-		model.classifier.require_grad = True
+		model.features.requires_grad = False
+		model.classifier.requires_grad = True
 	if state == 'fine':
-		model.features.require_grad = True
-		model.classifier.require_grad = True
+		model.features.requires_grad = True
+		model.classifier.requires_grad = True
 	model.train()
 
 	loss_train = np.zeros(epoch)
