@@ -39,9 +39,9 @@ class vgg_preloaded(nn.Module):
 
 
 class MelaData(Dataset):
-    """MelaData dataset."""
+	"""MelaData dataset."""
 
-    def __init__(self, data_dir, label_csv, transform=None):
+	def __init__(self, data_dir, label_csv, transform=None):
 		"""
 		Args:
 			csv_file (string): Path to the csv file with labels.
