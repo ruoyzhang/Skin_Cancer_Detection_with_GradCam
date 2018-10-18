@@ -10,6 +10,7 @@ from torchvision import models, transforms, utils
 from PIL import Image
 from tqdm import tqdm
 from torch.optim import Adam
+import cv2
 
 
 class vgg_preloaded(nn.Module):
@@ -92,6 +93,54 @@ class MelaData(Dataset):
 		label = np.array(label)
 		label_t = torch.from_numpy(label)[0]
 		return(image, label_t)
+
+
+#----------------------------------------------------
+# Below is the data splitter
+#----------------------------------------------------
+
+
+def train_val_test_split(dataset, train_split, val_split, test_split):
+	"""
+	Split data set into training, validation, and test sets.
+	"""
+	if train_split + val_split + test_split != 1:
+		print('Incorrect split sizes')
+
+	# Size of data set
+	N = dataset.__len__()
+
+	# Size of train set
+	train_size = math.floor(train_split * N)
+
+	# Size of validation set
+	val_size = math.floor(val_split * N)
+
+	# List of all data indices
+	indices = list(range(N))
+
+	# Random selection of indices for train set
+	train_ids = np.random.choice(indices, size=train_size, replace=False)
+	train_ids = list(train_ids)
+
+	# Deletion of indices used for train set
+	indices = list(set(indices) - set(train_ids))
+
+	# Random selection of indices for validation set
+	val_ids = np.random.choice(indices, size=val_size, replace=False)
+	val_ids = list(val_ids)
+
+	# Selecting remaining indices for test set
+	test_ids = list(set(indices) - set(val_ids))
+
+	# Creating subsets
+	train_data = torch.utils.data.Subset(dataset, train_ids)
+	val_data = torch.utils.data.Subset(dataset, val_ids)
+	test_data = torch.utils.data.Subset(dataset, test_ids)
+
+    return(train_data, val_data, test_data)
+
+
 
 
 #----------------------------------------------------
