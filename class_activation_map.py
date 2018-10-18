@@ -1,3 +1,8 @@
+#------------------------------------------------------------------------------------------------------
+# the following code has been inspired and modified from the original codes of @jacobgil found here:
+# https://github.com/jacobgil/pytorch-grad-cam
+#------------------------------------------------------------------------------------------------------
+
 import torch
 from torch.autograd import Function
 from torchvision import models
@@ -59,14 +64,7 @@ class GradCam:
 		if class_code is None:
 			class_code = np.argmax(output.cpu().data.numpy())
 
-		# isolate the chosen class
-		one_hot = np.zeros((1, output.size()[-1]), dtype = np.float32)
-		one_hot[0][class_code] = 1
-		one_hot = torch.from_numpy(one_hot)
-		one_hot.requires_grad = True
-		one_hot = one_hot.cuda() if self.cuda else one_hot
-		# extract the chosen class's activation value
-		activation_value = torch.sum(torch.mm(one_hot, output.t()))
+		activation_value = output[class_code]
 
 		# reset grad
 		self.model.features.zero_grad()
@@ -83,12 +81,14 @@ class GradCam:
 
 		for i, w in enumerate(grads):
 			cam += w * target_layer[i, :, :]
-
+		
+		# the ReLU activation taking advantage of python broadcasting
 		cam = np.maximum(cam, 0)
-		cam = cv2.resize(cam, (224, 224))
+		cam = cv2.resize(cam, (600, 450))
 		cam = cam - np.min(cam)
 		cam = cam / np.max(cam)
 		return(cam)
+
 
 
 
