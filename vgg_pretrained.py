@@ -73,7 +73,7 @@ class MelaData(Dataset):
 
 	def __getitem__(self, idx):
 		image_name_with_extension = self.files[idx]
-		image = Image.open(data_dir + image_name_with_extension)
+		image = Image.open(self.data_dir + image_name_with_extension)
 		image_name = image_name_with_extension.strip('.jpg')
 
 		if self.transform:
