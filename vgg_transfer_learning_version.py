@@ -148,7 +148,7 @@ def train_val_test_split(dataset, train_split, val_split, test_split):
 
 def train(data_dir, label_dir, save_dir, epoch, mb, num_class, stage = 'transfer', num_workers = 1, use_cuda = False, conti = False, lr = 1e-3, save = True, name = None):
 	# instantiate the vgg model
-	model = vgg_preloaded(num_class, use_cuda)
+	model = vgg_preloaded(num_class, use_cuda, stage)
 
 	if name is None:
 		name = 'model'
