@@ -6,8 +6,8 @@ cd data/
 kaggle datasets download -d kmader/skin-cancer-mnist-ham10000
 unzip skin-cancer-mnist-ham10000.zip
 chmod 755 *
-unzip HAM10000_images_part_1.zip -d images/train
-unzip HAM10000_images_part_2.zip -d images/train
+unzip HAM10000_images_part_1.zip -d images #/train
+unzip HAM10000_images_part_2.zip -d images #/train
 rm *.zip
 
 # SEPERATING TEST & TRAIN
