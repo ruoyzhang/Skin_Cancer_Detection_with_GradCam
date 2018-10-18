@@ -140,9 +140,6 @@ def train_val_test_split(dataset, train_split, val_split, test_split):
 
     return(train_data, val_data, test_data)
 
-
-
-
 #----------------------------------------------------
 # Below is the train function
 #----------------------------------------------------
@@ -218,6 +215,46 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, stage = 'transfer
 	return(loss_train, acc_train)
 
 #----------------------------------------------------
-# Below is the eval function
+# Below is the test function
 #----------------------------------------------------
+def test_model(model_dir, val_data, label_dir, batch_size, num_workers = 1, use_cuda = False):
+	model = vgg_preloaded(7, use_cuda=use_cuda)
+	model.load_state_dict(torch.load(model_dir))
+	model = model.cuda() if use_cuda else model
 
+	#dataset = MelaData(data_dir = data_dir, label_csv = label_dir)
+	dataloader = DataLoader(val_data, batch_size = batch_size, shuffle = False, num_workers = num_workers)
+	loss_fn = torch.nn.CrossEntropyLoss(reduction = 'sum')
+
+	model.eval()
+	predictions = [] #Store predictions in here
+	class_list = [] #store ground truth here
+
+	running_loss = 0.0
+	running_corrects = 0
+	count = 0
+
+	pbar = tqdm(dataloader)
+	pbar.set_description("[Epoch {}]".format('Validation'))
+	for inputs,classes in pbar:
+		if use_cuda:
+			inputs = inputs.cuda()
+			classes = classes.cuda()
+		else:
+			inputs = inputs
+			classes = classes
+		outputs = model(inputs)
+		loss = loss_fn(outputs,classes) 
+		_,preds = torch.max(outputs.data, 1)
+		running_loss += loss.cpu().data.item()
+		running_corrects += preds.eq(classes.view_as(preds)).sum()
+		predictions += list(preds.cpu().data.numpy())
+		if use_cuda:
+			class_save = classes.cpu().data.numpy()
+		else:
+			class_save = classes.data.numpy()
+		class_list.append(class_save)
+		count +=1
+
+	print('Loss: {:.4f} Acc: {:.4f}'.format(running_loss / len(val_data), running_corrects.data.item() / len(val_data)))
+	return({'loss': running_loss / len(val_data), 'acc': running_corrects.data.item() / len(val_data), 'predictions': predictions, 'classes': class_list})

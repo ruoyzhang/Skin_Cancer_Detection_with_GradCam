@@ -212,7 +212,7 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 def test_model(model_dir, val_data, batch_size, num_workers = 1, use_cuda = False):
 	model = vgg_preloaded(7, use_cuda=use_cuda)
 	model.load_state_dict(torch.load(modelpath))
-	model = model.cuda() if use_cuda else model.cpu()
+	model = model.cuda() if use_cuda else model
 
 	#dataset = MelaData(data_dir = data_dir, label_csv = label_dir)
 	data_loader = DataLoader(val_data, batch_size = batch_size, shuffle = True, num_workers = num_workers)
@@ -231,8 +231,8 @@ def test_model(model_dir, val_data, batch_size, num_workers = 1, use_cuda = Fals
 			inputs = inputs.cuda()
 			classes = classes.cuda()
 		else:
-			inputs = inputs.cpu()
-			classes = classes.cpu()
+			inputs = inputs
+			classes = classes
 		outputs = model(inputs)
 		loss = loss_fn(outputs,classes) 
 		_,preds = torch.max(outputs.data, 1)
