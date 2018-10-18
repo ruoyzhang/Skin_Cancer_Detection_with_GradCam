@@ -10,10 +10,13 @@ import torch.nn as nn
 from torchvision import models, transforms, utils
 from PIL import Image
 from tqdm import tqdm
+from torch.optim import Adam
+
 
 class vgg_preloaded(nn.Module):
 
 	def __init__(self, num_class, cuda):
+		super(vgg_preloaded, self).__init__()
 		self.cuda = cuda
 		self.num_class = num_class
 		self.dtype = torch.cuda.FloatTensor if self.cuda else torch.FloatTensor
@@ -80,7 +83,7 @@ class MelaData(Dataset):
 		label = self.labels.loc[self.labels['image_id'] == image_name, 'label']
 		label = np.array(label)
 		label_t = torch.from_numpy(label)
-		return({'image': image, 'label': label_t})
+		return(image, label_t)
 
 
 #----------------------------------------------------
@@ -118,7 +121,7 @@ def train(data_dir, label_dir, save_dir, name = 'model', epoch, mb, num_class, n
 		size = 0
 
 		dataset = MelaData(data_dir = data_dir, label_csv = label_dir)
-		dataloader = DataLoader(dataset, mb = mb, shuffle = True, num_workers = num_workers)
+		dataloader = DataLoader(dataset, batch_size = mb, shuffle = True, num_workers = num_workers)
 
 		pbar = tqdm(dataloader)
 		pbar.set_description("[Epoch {}]".format(epoch_num))
