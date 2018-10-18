@@ -199,7 +199,7 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 		epoch_acc = running_corrects.item() / size
 
 		if not epoch_num%save_freq:
-			mid_name = name + '_' + str(epoch_num)
+			mid_name = '{}_{}_loss_{}_acc_{}'.format(str(name), str(epoch_num), str(epoch_loss), str(epoch_acc))
 			torch.save(model.state_dict(), os.path.join(save_dir, '{}.pt'.format(mid_name)))
 			torch.save(optim.state_dict(), os.path.join(save_dir, '{}.optim.pt'.format(mid_name)))			
 
