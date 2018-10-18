@@ -30,7 +30,7 @@ class vgg_preloaded(nn.Module):
 		self.model.classifier = nn.Sequential(*features)
 		self.model.classifier.require_grad = True
 
-	def forward(inp):
+	def forward(self, inp):
 		return(self.model(inp))
 
 #----------------------------------------------------
@@ -82,7 +82,7 @@ class MelaData(Dataset):
 
 		label = self.labels.loc[self.labels['image_id'] == image_name, 'label']
 		label = np.array(label)
-		label_t = torch.from_numpy(label)
+		label_t = torch.from_numpy(label)[0]
 		return(image, label_t)
 
 
@@ -131,8 +131,8 @@ def train(data_dir, label_dir, save_dir, name = 'model', epoch, mb, num_class, n
 				inputs = inputs.cuda()
 				labels = labels.cuda()
 			output = model(inputs)
-			_, preds = torch.max(outputs.data, 1)
-			loss = loss_fun(preds, labels)
+			_, preds = torch.max(output.data, 1)
+			loss = loss_fun(output, labels)
 			running_loss += loss
 			running_corrects += preds.eq(labels.view_as(preds)).sum()
 			optim.zero_grad()
@@ -142,11 +142,16 @@ def train(data_dir, label_dir, save_dir, name = 'model', epoch, mb, num_class, n
 
 		epoch_loss = running_loss / size
 		epoch_acc = running_corrects.item() / size
-		loss_train[epoch_num] = epoch_loss
-		acc_train[epoch_num] = epoch_acc
+		loss_train[epoch_num-1] = epoch_loss
+		acc_train[epoch_num-1] = epoch_acc
 		print('Train - Loss: {:.4F} Acc: {:.4f}'.format(epoch_loss, epoch_acc))
 
 	if save:
 		torch.save(model.state_dict(), os.path.join(save_dir, '{}.pt'.format(name)))
 		torch.save(optim.state_dict(), os.path.join(save_dir, '{}.optim.pt'.format(name)))
 	return(loss_train, acc_train)
+
+#----------------------------------------------------
+# Below is the eval function
+#----------------------------------------------------
+
