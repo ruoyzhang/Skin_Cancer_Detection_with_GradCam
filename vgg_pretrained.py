@@ -209,9 +209,10 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 #----------------------------------------------------
 # Below is the eval function
 #----------------------------------------------------
-def test_model(model_dir, val_data, label_dir, batch_size, num_workers = 1):
-	model = vgg_preloaded(7, cuda=False)
+def test_model(model_dir, val_data, batch_size, num_workers = 1, use_cuda = False):
+	model = vgg_preloaded(7, use_cuda=use_cuda)
 	model.load_state_dict(torch.load(modelpath))
+	model = model.cuda() if use_cuda else model
 
 	#dataset = MelaData(data_dir = data_dir, label_csv = label_dir)
 	data_loader = DataLoader(val_data, batch_size = batch_size, shuffle = True, num_workers = num_workers)
@@ -219,20 +220,30 @@ def test_model(model_dir, val_data, label_dir, batch_size, num_workers = 1):
 
 	model.eval()
 	predictions = [] #Store predictions in here
-	classes = [] #store ground truth here
+	class_list = [] #store ground truth here
 
 	running_loss = 0.0
 	running_corrects = 0
 	count = 0
 
 	for inputs,classes in data_loader:
+		if use_cuda:
+			inputs = inputs.cuda()
+			classes = classes.cuda()
+		else:
+			inputs = inputs
+			classes = classes
 		outputs = model(inputs)
 		loss = loss_fn(outputs,classes) 
 		_,preds = torch.max(outputs.data, 1)
 		running_loss += loss
 		running_corrects += preds.eq(classes.view_as(preds)).sum()
 		predictions += list(preds)
-		classes += list(classes.data.numpy())
+		if use_cuda:
+			class_save = classes.cpu().data.numpy()
+		else:
+			class_save = classes.data.numpy()
+		class_list += list(class_save)
 		count +=1
 
 	print('Loss: {:.4f} Acc: {:.4f}'.format(running_loss / len(dataset), running_corrects.data.item() / len(dataset)))
