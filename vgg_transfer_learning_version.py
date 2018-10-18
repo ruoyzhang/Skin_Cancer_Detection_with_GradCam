@@ -14,21 +14,26 @@ from torch.optim import Adam
 
 class vgg_preloaded(nn.Module):
 
-	def __init__(self, num_class, use_cuda):
+	def __init__(self, num_class, use_cuda, stage = 'transfer'):
 		super(vgg_preloaded, self).__init__()
 		self.use_cuda = use_cuda
 		self.num_class = num_class
 		self.stage = stage
 		self.dtype = torch.cuda.FloatTensor if self.use_cuda else torch.FloatTensor
 		model = models.vgg16(pretrained=True)
+		# now modify
 		self.model = model.cuda() if self.use_cuda else model
-		for param in self.model.features.parameters():
-			param.require_grad = False
 		num_features = self.model.classifier[6].in_features
 		features = list(self.model.classifier.children())[:-1] # Remove last layer
 		features.extend([nn.Linear(num_features, self.num_class)])
-		self.model.classifier = nn.Sequential(*features)
-		self.model.classifier.require_grad = True
+		if stage == 'transfer':
+			for param in self.model.features.parameters():
+				param.require_grad = False
+			self.model.classifier = nn.Sequential(*features)
+			self.model.classifier.require_grad = True
+		elif stage == 'fine':
+			self.model.classifier.require_grad = True
+			self.model.features = True
 
 	def forward(self, inp):
 		return(self.model(inp))
@@ -95,7 +100,7 @@ class MelaData(Dataset):
 
 
 
-def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, use_cuda = False, conti = False, lr = 1e-3, save = True, name = None):
+def train(data_dir, label_dir, save_dir, epoch, mb, num_class, stage = 'transfer', num_workers = 1, use_cuda = False, conti = False, lr = 1e-3, save = True, name = None):
 	# instantiate the vgg model
 	model = vgg_preloaded(num_class, use_cuda)
 
@@ -114,6 +119,12 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 		model.load_state_dict(torch.load(modelpath))
 	if use_cuda:
 		model = model.cuda()
+	if stage == 'transfer':
+		model.features.require_grad = False
+		model.classifier.require_grad = True
+	if state == 'fine':
+		model.features.require_grad = True
+		model.classifier.require_grad = True
 	model.train()
 
 	loss_train = np.zeros(epoch)
