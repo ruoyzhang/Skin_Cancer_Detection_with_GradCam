@@ -61,6 +61,9 @@ class MelaData(Dataset):
 			transform = transforms.Compose([
 				transforms.Resize(224),
 				transforms.CenterCrop(224),
+				transforms.ColorJitter(hue=.05, saturation=.05),
+				transforms.RandomHorizontalFlip(),
+				transforms.RandomRotation(360, resample=Image.BILINEAR),
 				transforms.ToTensor(),
 				normalize,
 				])
