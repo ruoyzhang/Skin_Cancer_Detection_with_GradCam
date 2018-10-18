@@ -14,13 +14,13 @@ from torch.optim import Adam
 
 class vgg_preloaded(nn.Module):
 
-	def __init__(self, num_class, cuda):
+	def __init__(self, num_class, use_cuda):
 		super(vgg_preloaded, self).__init__()
-		self.cuda = cuda
+		self.use_cuda = use_cuda
 		self.num_class = num_class
-		self.dtype = torch.cuda.FloatTensor if self.cuda else torch.FloatTensor
+		self.dtype = torch.cuda.FloatTensor if self.use_cuda else torch.FloatTensor
 		model = models.vgg16(pretrained=True)
-		self.model = model.cuda() if self.cuda else model
+		self.model = model.cuda() if self.use_cuda else model
 		for param in self.model.features.parameters():
 			param.require_grad = False
 		num_features = self.model.classifier[6].in_features
