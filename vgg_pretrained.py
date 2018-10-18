@@ -18,7 +18,6 @@ class vgg_preloaded(nn.Module):
 		super(vgg_preloaded, self).__init__()
 		self.use_cuda = use_cuda
 		self.num_class = num_class
-		self.stage = stage
 		self.dtype = torch.cuda.FloatTensor if self.use_cuda else torch.FloatTensor
 		model = models.vgg16(pretrained=True)
 		self.model = model.cuda() if self.use_cuda else model
@@ -97,8 +96,8 @@ def train_val_test_split(dataset, train_split, val_split, test_split):
 	"""
 	Split data set into training, validation, and test sets.
 	"""
-	if train_split + val_split + test_split != 1:
-		print('Incorrect split sizes')
+	#if train_split + val_split + test_split != 1:
+		#print('Incorrect split sizes')
 
 	# Size of data set
 	N = dataset.__len__()
@@ -130,8 +129,7 @@ def train_val_test_split(dataset, train_split, val_split, test_split):
 	train_data = torch.utils.data.Subset(dataset, train_ids)
 	val_data = torch.utils.data.Subset(dataset, val_ids)
 	test_data = torch.utils.data.Subset(dataset, test_ids)
-
-    return(train_data, val_data, test_data)
+	return(train_data, val_data, test_data)
 
 
 
@@ -143,7 +141,7 @@ def train_val_test_split(dataset, train_split, val_split, test_split):
 
 
 
-def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, use_cuda = False, conti = False, lr = 1e-3, save = True, name = None):
+def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, use_cuda = False, conti = False, lr = 1e-3, save = True, name = None, train_prop = 0.7):
 	# instantiate the vgg model
 	model = vgg_preloaded(num_class, use_cuda)
 
@@ -168,14 +166,16 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 	acc_train = np.zeros(epoch)
 	loss_fun = torch.nn.CrossEntropyLoss(reduction = 'sum')
 	optim = Adam(model.parameters(), lr = lr)
+	dataset = MelaData(data_dir = data_dir, label_csv = label_dir)
+	val_prop = 1 - train_prop
+	train_data, val_data, test_data = train_val_test_split(dataset, train_prop, val_prop, 0.0)
 
 	for epoch_num in range(1, epoch+1):
 		running_loss = 0.0
 		running_corrects = 0.0
 		size = 0
 
-		dataset = MelaData(data_dir = data_dir, label_csv = label_dir)
-		dataloader = DataLoader(dataset, batch_size = mb, shuffle = True, num_workers = num_workers)
+		dataloader = DataLoader(train_data, batch_size = mb, shuffle = True, num_workers = num_workers)
 
 		pbar = tqdm(dataloader)
 		pbar.set_description("[Epoch {}]".format(epoch_num))
@@ -203,9 +203,34 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 	if save:
 		torch.save(model.state_dict(), os.path.join(save_dir, '{}.pt'.format(name)))
 		torch.save(optim.state_dict(), os.path.join(save_dir, '{}.optim.pt'.format(name)))
-	return(loss_train, acc_train)
+	return(loss_train, acc_train, val_data)
 
 #----------------------------------------------------
 # Below is the eval function
 #----------------------------------------------------
+def test_model(model_dir, data_dir, label_dir, batch_size, num_workers = 1):
+	model = vgg_preloaded(7, cuda=False)
+	model.load_state_dict(torch.load(modelpath))
 
+	dataset = MelaData(data_dir = data_dir, label_csv = label_dir)
+	data_loader = DataLoader(dataset, batch_size = batch_size, shuffle = True, num_workers = num_workers)
+	loss_fn = torch.nn.CrossEntropyLoss(reduction = 'sum')
+
+	model.eval()
+	predictions = [] #Store predictions in here
+
+	running_loss = 0.0
+	running_corrects = 0
+	count = 0
+
+	for inputs,classes in data_loader:
+		outputs = model(inputs)
+		loss = loss_fn(outputs,classes) 
+		_,preds = torch.max(outputs.data, 1)
+		running_loss += loss
+		running_corrects += preds.eq(classes.view_as(preds)).sum()
+		predictions += list(preds)
+		count +=1
+
+	print('Loss: {:.4f} Acc: {:.4f}'.format(running_loss / len(dataset), running_corrects.data.item() / len(dataset)))
+	return {'loss': running_loss / len(dataset), 'acc': running_corrects.data.item() / len(dataset), 'predictions': predictions}
