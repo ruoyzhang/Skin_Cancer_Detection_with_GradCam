@@ -91,9 +91,9 @@ class MelaData(Dataset):
 
 
 
-def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, cuda = False, conti = False, lr = 1e-3, save = True, name = None):
+def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, use_cuda = False, conti = False, lr = 1e-3, save = True, name = None):
 	# instantiate the vgg model
-	model = vgg_preloaded(num_class, cuda)
+	model = vgg_preloaded(num_class, use_cuda)
 
 	if name is None:
 		name = 'model'
@@ -108,7 +108,7 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 	# do we wanna continue to train
 	if os.path.isfile(modelpath) and conti:
 		model.load_state_dict(torch.load(modelpath))
-	if cuda:
+	if use_cuda:
 		model = model.cuda()
 	model.train()
 
@@ -129,7 +129,7 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 		pbar.set_description("[Epoch {}]".format(epoch_num))
 		for inputs, labels in pbar:
 			bs = labels.size(0)
-			if cuda:
+			if use_cuda:
 				inputs = inputs.cuda()
 				labels = labels.cuda()
 			output = model(inputs)
