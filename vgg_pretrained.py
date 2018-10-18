@@ -1,4 +1,3 @@
-from _future_ import print_function, division
 import os
 import torch
 import pandas as pd
@@ -15,13 +14,13 @@ from torch.optim import Adam
 
 class vgg_preloaded(nn.Module):
 
-	def __init__(self, num_class, cuda):
+	def __init__(self, num_class, use_cuda):
 		super(vgg_preloaded, self).__init__()
-		self.cuda = cuda
+		self.use_cuda = use_cuda
 		self.num_class = num_class
-		self.dtype = torch.cuda.FloatTensor if self.cuda else torch.FloatTensor
+		self.dtype = torch.cuda.FloatTensor if self.use_cuda else torch.FloatTensor
 		model = models.vgg16(pretrained=True)
-		self.model = model.cuda() if self.cuda else model
+		self.model = model.cuda() if self.use_cuda else model
 		for param in self.model.features.parameters():
 			param.require_grad = False
 		num_features = self.model.classifier[6].in_features
@@ -39,9 +38,9 @@ class vgg_preloaded(nn.Module):
 
 
 class MelaData(Dataset):
-    """MelaData dataset."""
+	"""MelaData dataset."""
 
-    def __init__(self, data_dir, label_csv, transform=None):
+	def __init__(self, data_dir, label_csv, transform=None):
 		"""
 		Args:
 			csv_file (string): Path to the csv file with labels.
@@ -62,6 +61,9 @@ class MelaData(Dataset):
 			transform = transforms.Compose([
 				transforms.Resize(224),
 				transforms.CenterCrop(224),
+				transforms.ColorJitter(hue=.05, saturation=.05),
+				transforms.RandomHorizontalFlip(),
+				transforms.RandomRotation(360, resample=Image.BILINEAR),
 				transforms.ToTensor(),
 				normalize,
 				])
@@ -74,7 +76,7 @@ class MelaData(Dataset):
 
 	def __getitem__(self, idx):
 		image_name_with_extension = self.files[idx]
-		image = Image.open(data_dir + image_name_with_extension)
+		image = Image.open(self.data_dir + image_name_with_extension)
 		image_name = image_name_with_extension.strip('.jpg')
 
 		if self.transform:
@@ -92,9 +94,12 @@ class MelaData(Dataset):
 
 
 
-def train(data_dir, label_dir, save_dir, name = 'model', epoch, mb, num_class, num_workers = 1, cuda, conti = False, lr = 1e-3, save = True):
+def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, use_cuda = False, conti = False, lr = 1e-3, save = True, name = None):
 	# instantiate the vgg model
-	model = vgg_preloaded(num_class, cuda)
+	model = vgg_preloaded(num_class, use_cuda)
+
+	if name is None:
+		name = 'model'
 
 	# if dir does not exit, make it:
 	if not os.path.isdir(save_dir):
@@ -106,7 +111,7 @@ def train(data_dir, label_dir, save_dir, name = 'model', epoch, mb, num_class, n
 	# do we wanna continue to train
 	if os.path.isfile(modelpath) and conti:
 		model.load_state_dict(torch.load(modelpath))
-	if cuda:
+	if use_cuda:
 		model = model.cuda()
 	model.train()
 
@@ -127,7 +132,7 @@ def train(data_dir, label_dir, save_dir, name = 'model', epoch, mb, num_class, n
 		pbar.set_description("[Epoch {}]".format(epoch_num))
 		for inputs, labels in pbar:
 			bs = labels.size(0)
-			if cuda:
+			if use_cuda:
 				inputs = inputs.cuda()
 				labels = labels.cuda()
 			output = model(inputs)
