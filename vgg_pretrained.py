@@ -91,9 +91,12 @@ class MelaData(Dataset):
 
 
 
-def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, cuda = False, conti = False, lr = 1e-3, save = True):
+def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, cuda = False, conti = False, lr = 1e-3, save = True, name = None):
 	# instantiate the vgg model
 	model = vgg_preloaded(num_class, cuda)
+
+	if name is None:
+		name = 'model'
 
 	# if dir does not exit, make it:
 	if not os.path.isdir(save_dir):
