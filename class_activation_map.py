@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------------------------------
-# the following code has been inspired and modified from the original codes of @jacobgil found here:
+# the following code has been inspired and derived from the original codes of @jacobgil found here:
 # https://github.com/jacobgil/pytorch-grad-cam
 #------------------------------------------------------------------------------------------------------
 
