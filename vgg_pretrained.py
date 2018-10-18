@@ -92,7 +92,7 @@ class MelaData(Dataset):
 
 
 
-def train(data_dir, label_dir, save_dir, name = 'model', epoch, mb, num_class, num_workers = 1, cuda, conti = False, lr = 1e-3, save = True):
+def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, cuda = False, conti = False, lr = 1e-3, save = True):
 	# instantiate the vgg model
 	model = vgg_preloaded(num_class, cuda)
 
