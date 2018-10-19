@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------------------------------
-# the following code has been inspired and modified from the original codes of @jacobgil found here:
+# the following code has been inspired and derived from the original codes of @jacobgil found here:
 # https://github.com/jacobgil/pytorch-grad-cam
 #------------------------------------------------------------------------------------------------------
 
@@ -28,6 +28,7 @@ class ExtractFeatures:
 	def record_and_feed_forward(self, inp):
 		# we want to reset the gradient every time we call the method
 		self.gradients = []
+		layer_output = None
 		for name, layer in self.model.features._modules.items():
 			# here we mannually pass the input through the NN until the identified layer
 			inp = layer(inp)
@@ -64,13 +65,19 @@ class GradCam:
 		if class_code is None:
 			class_code = np.argmax(output.cpu().data.numpy())
 
-		activation_value = output[class_code]
+		# one_hot = np.zeros((1, output.size()[-1]), dtype = np.float32)
+		# one_hot[0][class_code] = 1
+		# one_hot = torch.from_numpy(one_hot)
+		# one_hot.requires_grad = True
+		# one_hot = one_hot.cuda()
+		# activation_value = torch.sum(torch.mm(one_hot, output.t()))
+		activation_value = output[0][class_code]
 
 		# reset grad
 		self.model.features.zero_grad()
 		self.model.classifier.zero_grad()
 		# backpro
-		activation_value.backward(retain_variables = True)
+		activation_value.backward()
 
 		# we then obtain the gradient of the identified layer
 		grads = self.extractfeatures.gradients[-1].cpu().data.numpy()

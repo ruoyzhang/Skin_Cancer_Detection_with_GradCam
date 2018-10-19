@@ -165,12 +165,12 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, stage = 'transfer
 		model.load_state_dict(torch.load(modelpath))
 	if use_cuda:
 		model = model.cuda()
-	if stage == 'transfer':
-		model.features.requires_grad = False
-		model.classifier.requires_grad = True
-	if state == 'fine':
-		model.features.requires_grad = True
-		model.classifier.requires_grad = True
+	# if stage == 'transfer':
+	# 	model.features.requires_grad = False
+	# 	model.classifier.requires_grad = True
+	# if state == 'fine':
+	# 	model.features.requires_grad = True
+	# 	model.classifier.requires_grad = True
 	model.train()
 
 	loss_train = np.zeros(epoch)

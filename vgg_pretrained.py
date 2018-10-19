@@ -142,7 +142,7 @@ def train_val_test_split(dataset, train_split, val_split, test_split):
 
 
 
-def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, use_cuda = False, conti = False, lr = 1e-3, save = True, name = None, train_prop = 0.7):
+def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, use_cuda = False, conti = False, lr = 1e-3, final_save = True, save_freq = 0, name = None, train_prop = 0.7):
 	# instantiate the vgg model
 	model = vgg_preloaded(num_class, use_cuda)
 
@@ -197,11 +197,17 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 
 		epoch_loss = running_loss / size
 		epoch_acc = running_corrects.item() / size
+
+		if not epoch_num%save_freq:
+			mid_name = '{}_{}_loss_{}_acc_{}'.format(str(name), str(epoch_num), str(epoch_loss), str(epoch_acc))
+			torch.save(model.state_dict(), os.path.join(save_dir, '{}.pt'.format(mid_name)))
+			torch.save(optim.state_dict(), os.path.join(save_dir, '{}.optim.pt'.format(mid_name)))			
+
 		loss_train[epoch_num-1] = epoch_loss
 		acc_train[epoch_num-1] = epoch_acc
 		print('Train - Loss: {:.4F} Acc: {:.4f}'.format(epoch_loss, epoch_acc))
 
-	if save:
+	if final_save:
 		torch.save(model.state_dict(), os.path.join(save_dir, '{}.pt'.format(name)))
 		torch.save(optim.state_dict(), os.path.join(save_dir, '{}.optim.pt'.format(name)))
 	return(loss_train, acc_train, val_data)
@@ -209,13 +215,13 @@ def train(data_dir, label_dir, save_dir, epoch, mb, num_class, num_workers = 1, 
 #----------------------------------------------------
 # Below is the eval function
 #----------------------------------------------------
-def test_model(model_dir, val_data, batch_size, num_workers = 1, use_cuda = False):
+def test_model(model_dir, val_data, label_dir, batch_size, num_workers = 1, use_cuda = False):
 	model = vgg_preloaded(7, use_cuda=use_cuda)
-	model.load_state_dict(torch.load(modelpath))
+	model.load_state_dict(torch.load(model_dir))
 	model = model.cuda() if use_cuda else model
 
 	#dataset = MelaData(data_dir = data_dir, label_csv = label_dir)
-	data_loader = DataLoader(val_data, batch_size = batch_size, shuffle = True, num_workers = num_workers)
+	dataloader = DataLoader(val_data, batch_size = batch_size, shuffle = False, num_workers = num_workers)
 	loss_fn = torch.nn.CrossEntropyLoss(reduction = 'sum')
 
 	model.eval()
@@ -226,7 +232,9 @@ def test_model(model_dir, val_data, batch_size, num_workers = 1, use_cuda = Fals
 	running_corrects = 0
 	count = 0
 
-	for inputs,classes in data_loader:
+	pbar = tqdm(dataloader)
+	pbar.set_description("[Epoch {}]".format('Validation'))
+	for inputs,classes in pbar:
 		if use_cuda:
 			inputs = inputs.cuda()
 			classes = classes.cuda()
@@ -236,19 +244,15 @@ def test_model(model_dir, val_data, batch_size, num_workers = 1, use_cuda = Fals
 		outputs = model(inputs)
 		loss = loss_fn(outputs,classes) 
 		_,preds = torch.max(outputs.data, 1)
-		running_loss += loss
+		running_loss += loss.cpu().data.item()
 		running_corrects += preds.eq(classes.view_as(preds)).sum()
-		predictions += list(preds)
+		predictions += list(preds.cpu().data.numpy())
 		if use_cuda:
 			class_save = classes.cpu().data.numpy()
 		else:
 			class_save = classes.data.numpy()
-		class_list += list(class_save)
+		class_list.append(class_save)
 		count +=1
 
-	print('Loss: {:.4f} Acc: {:.4f}'.format(running_loss / len(dataset), running_corrects.data.item() / len(dataset)))
-	return({'loss': running_loss / len(dataset), 'acc': running_corrects.data.item() / len(dataset), 'predictions': predictions, 'classes': classes})
-
-
-
-
+	print('Loss: {:.4f} Acc: {:.4f}'.format(running_loss / len(val_data), running_corrects.data.item() / len(val_data)))
+	return({'loss': running_loss / len(val_data), 'acc': running_corrects.data.item() / len(val_data), 'predictions': predictions, 'classes': class_list})
