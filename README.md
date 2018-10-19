@@ -19,4 +19,4 @@ We trained and tested our models on the HAM10000 ("Human Against Machine with 10
 
 Our VGG16 model achieved 92% accuracy on our test set after 100 epochs.
 
-The detailed presentation is in [presentation.ipynb](#presentation.ipynb).
+The detailed presentation is in [presentation.ipynb](#blob/master/presentation.ipynb).
