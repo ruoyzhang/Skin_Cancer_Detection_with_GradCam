@@ -28,6 +28,7 @@ class ExtractFeatures:
 	def record_and_feed_forward(self, inp):
 		# we want to reset the gradient every time we call the method
 		self.gradients = []
+		layer_output = None
 		for name, layer in self.model.features._modules.items():
 			# here we mannually pass the input through the NN until the identified layer
 			inp = layer(inp)
