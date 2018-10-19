@@ -24,4 +24,4 @@ Our VGG16 model achieved 92% accuracy on our test set after 100 epochs.
 The detailed presentation is in [presentation.ipynb](presentation.ipynb).
 
 
-![presentation/data_augmentation.png](attachment:data_augmentation.png)
+![data_augmentation.png](attachment:presentation/data_augmentation.png)
