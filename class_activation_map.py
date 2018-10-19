@@ -65,7 +65,12 @@ class GradCam:
 		if class_code is None:
 			class_code = np.argmax(output.cpu().data.numpy())
 
-		activation_value = output[class_code]
+		one_hot = np.zeros((1, output.size()[-1]), dtype = np.float32)
+		one_hot[0][class_code] = 1
+		one_hot = torch.from_numpy(one_hot)
+		one_hot.requires_grad = True
+		one_hot = one_hot.cuda()
+		activation_value = torch.sum(torch.mm(one_hot, output.t()))
 
 		# reset grad
 		self.model.features.zero_grad()
