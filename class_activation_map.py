@@ -32,7 +32,7 @@ class ExtractFeatures:
 		for name, layer in self.model.features._modules.items():
 			# here we mannually pass the input through the NN until the identified layer
 			inp = layer(inp)
-			if name[0] == self.target_layer:
+			if name == self.target_layer:
 				# here by registering the hook, we tag the layer and notify torch that we want to keep the gradient for this layer
 				inp.register_hook(self.save_grad)
 				# record the output at the identified layer, the output is the same as the input for the next layer (activation: final ReLU for VGG before classif)
