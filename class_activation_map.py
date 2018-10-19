@@ -71,7 +71,7 @@ class GradCam:
 		self.model.features.zero_grad()
 		self.model.classifier.zero_grad()
 		# backpro
-		activation_value.backward(retain_variables = True)
+		activation_value.backward()
 
 		# we then obtain the gradient of the identified layer
 		grads = self.extractfeatures.gradients[-1].cpu().data.numpy()
