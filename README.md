@@ -23,7 +23,13 @@ Our VGG16 model achieved 92% accuracy on our test set after 100 epochs on the cl
 
 The GradCam was able to detect discriminating visual features of particular legion classes.
 See the images below for illustration:
+
+The Original Picture:
+
 ![Original Picture](https://github.com/ruoyzhang/Skin_Cancer_Detection_with_GradCam/blob/master/Sampled_images/ISIC_0029319.jpg)
+
+The GradCam Overlay:
+
 ![GradCam Overlay](https://github.com/ruoyzhang/Skin_Cancer_Detection_with_GradCam/blob/master/Sampled_images/cam_ISIC_0029319.jpg)
 
 The detailed presentation is in [presentation.ipynb](presentation.ipynb).
