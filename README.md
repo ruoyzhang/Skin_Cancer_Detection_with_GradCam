@@ -19,6 +19,13 @@ We trained and tested our models on the HAM10000 ("Human Against Machine with 10
  - melanocytic nevi (nv)
  - vascular lesions (angiomas, angiokeratomas, pyogenic granulomas and hemorrhage, vasc).
 
-Our VGG16 model achieved 92% accuracy on our test set after 100 epochs.
+Our VGG16 model achieved 92% accuracy on our test set after 100 epochs on the classification task.
+
+The GradCam was able to detect discriminating visual features of particular legion classes.
+See the images below for illustration:
+![Original Picture](https://github.com/ruoyzhang/Skin_Cancer_Detection_with_GradCam/blob/master/Sampled_images/ISIC_0029319.jpg)
+![GradCam Overlay](https://github.com/ruoyzhang/Skin_Cancer_Detection_with_GradCam/blob/master/Sampled_images/cam_ISIC_0029319.jpg)
 
 The detailed presentation is in [presentation.ipynb](presentation.ipynb).
+
+
